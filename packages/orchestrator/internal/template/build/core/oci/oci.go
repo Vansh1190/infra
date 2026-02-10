@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -62,7 +63,7 @@ func (e *ImageTooLargeError) Error() string {
 
 var DefaultPlatform = containerregistry.Platform{
 	OS:           "linux",
-	Architecture: "amd64",
+	Architecture: runtime.GOARCH,
 }
 
 // wrapImagePullError converts technical Docker registry errors into user-friendly messages.
