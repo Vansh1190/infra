@@ -44,18 +44,9 @@ import (
 )
 
 const (
-	defaultBaseImage = "e2bdev/base:latest"
-	proxyPort        = 5007
+	baseImage = "e2bdev/base:latest"
+	proxyPort = 5007
 )
-
-// baseImage returns the OCI base image, overridable via E2B_BASE_IMAGE env var.
-func baseImage() string {
-	if img := os.Getenv("E2B_BASE_IMAGE"); img != "" {
-		return img
-	}
-
-	return defaultBaseImage
-}
 
 func main() {
 	templateID := flag.String("template", "local-template", "template id")
@@ -350,7 +341,7 @@ func doBuild(
 		tmpl.FromTemplate = &templatemanager.FromTemplateConfig{BuildID: fromBuild}
 		fmt.Printf("Building from: %s\n", fromBuild)
 	} else {
-		tmpl.FromImage = baseImage()
+		tmpl.FromImage = baseImage
 	}
 
 	result, err := builder.Build(ctx, storage.TemplateFiles{BuildID: buildID}, tmpl, l.Detach(ctx).Core())
