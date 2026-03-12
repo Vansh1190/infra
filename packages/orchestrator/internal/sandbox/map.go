@@ -124,7 +124,7 @@ func (m *Map) Insert(ctx context.Context, sbx *Sandbox) {
 
 // MarkRunning transitions a sandbox from starting to running and notifies OnInsert subscribers
 func (m *Map) MarkRunning(sbx *Sandbox) {
-	sbx.status.Store(int32(Status`Running))
+	sbx.status.Store(int32(StatusRunning))
 
 	go m.trigger(func(s MapSubscriber) {
 		s.OnInsert(sbx)
