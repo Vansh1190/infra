@@ -236,12 +236,22 @@ func (bb *BaseBuilder) buildLayerFromOCI(
 	// Check the rootfs filesystem corruption
 	ext4Check, err := filesystem.CheckIntegrity(ctx, rootfsPath, true)
 	if err != nil {
-		logger.L().Error(ctx, "provisioned filesystem ext4 integrity",
+		// Preen mode (-p) cannot fix some issues like corrupted orphan linked lists
+		// (e.g. when provision.sh deletes itself while running). Retry with force fix (-y).
+		logger.L().Warn(ctx, "provisioned filesystem preen check failed, retrying with force fix",
 			zap.String("result", ext4Check),
 			zap.Error(err),
 		)
 
-		return metadata.Template{}, fmt.Errorf("error checking provisioned filesystem integrity: %w", err)
+		ext4Check, err = filesystem.ForceCheckIntegrity(ctx, rootfsPath)
+		if err != nil {
+			logger.L().Error(ctx, "provisioned filesystem ext4 integrity (force fix)",
+				zap.String("result", ext4Check),
+				zap.Error(err),
+			)
+
+			return metadata.Template{}, fmt.Errorf("error checking provisioned filesystem integrity: %w", err)
+		}
 	}
 	logger.L().Debug(ctx, "provisioned filesystem ext4 integrity",
 		zap.String("result", ext4Check),

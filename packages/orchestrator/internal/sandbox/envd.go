@@ -74,6 +74,15 @@ func (s *Sandbox) doRequestWithInfiniteRetries(
 			return response, requestCount, nil
 		}
 
+		if requestCount == 1 || requestCount%200 == 0 {
+			logger.L().Info(ctx, "failed to do request to envd, retrying",
+				logger.WithSandboxID(s.Runtime.SandboxID),
+				logger.WithEnvdVersion(s.Config.Envd.Version),
+				zap.Int64("request_count", requestCount),
+				zap.Int64("timeout_ms", s.internalConfig.EnvdInitRequestTimeout.Milliseconds()),
+				zap.Error(err))
+		}
+
 		select {
 		case <-ctx.Done():
 			return nil, requestCount, fmt.Errorf("%w with cause: %w", ctx.Err(), context.Cause(ctx))
@@ -111,6 +120,14 @@ func (s *Sandbox) initEnvd(ctx context.Context) (e error) {
 
 	address := fmt.Sprintf("http://%s:%d/init", s.Slot.HostIPString(), consts.DefaultEnvdServerPort)
 
+	logger.L().Info(ctx, "attempting to init envd",
+		logger.WithSandboxID(s.Runtime.SandboxID),
+		zap.String("address", address),
+		zap.String("host_ip", s.Slot.HostIPString()),
+		zap.String("namespace_ip", s.Slot.NamespaceIP()),
+		zap.String("namespace_id", s.Slot.NamespaceID()),
+	)
+
 	response, count, err := s.doRequestWithInfiniteRetries(ctx, http.MethodPost, address)
 	if err != nil {
 		logger.L().Error(ctx, "failed to init envd after retries",
@@ -122,6 +139,13 @@ func (s *Sandbox) initEnvd(ctx context.Context) (e error) {
 		)
 
 		envdInitCalls.Add(ctx, count, metric.WithAttributes(attributesFail...))
+
+		logger.L().Error(ctx, "envd init failed after retries",
+			logger.WithSandboxID(s.Runtime.SandboxID),
+			zap.String("address", address),
+			zap.Int64("retry_count", count),
+			zap.Error(err),
+		)
 
 		return fmt.Errorf("failed to init envd: %w", err)
 	}

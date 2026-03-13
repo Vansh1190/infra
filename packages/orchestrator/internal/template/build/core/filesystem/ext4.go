@@ -229,6 +229,26 @@ func CheckIntegrity(ctx context.Context, rootfsPath string, fix bool) (string, e
 	return strings.TrimSpace(string(out)), nil
 }
 
+// ForceCheckIntegrity runs e2fsck -yfv which answers "yes" to all repair questions.
+// This handles issues like corrupted orphan linked lists that preen mode (-p) cannot fix.
+func ForceCheckIntegrity(ctx context.Context, rootfsPath string) (string, error) {
+	LogMetadata(ctx, rootfsPath)
+	// -y: assume answer "yes" to all questions
+	// -f: force checking even if filesystem seems clean
+	// -v: verbose output
+	// Accept exit codes 0-2 (0=clean, 1=errors corrected, 2=corrected+reboot needed)
+	cmd := exec.CommandContext(ctx, "e2fsck", "-yfv", rootfsPath)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		exitCode := cmd.ProcessState.ExitCode()
+		if exitCode > 2 {
+			return string(out), fmt.Errorf("error running e2fsck -yfv [exit %d]\n%s", exitCode, out)
+		}
+	}
+
+	return strings.TrimSpace(string(out)), nil
+}
+
 func ReadFile(ctx context.Context, rootfsPath string, filePath string) (string, error) {
 	_, statSpan := tracer.Start(ctx, "ext4-read-file")
 	defer statSpan.End()

@@ -240,6 +240,8 @@ func additionalOCILayers(
 			"etc/systemd/system/multi-user.target.wants/envd.service": "etc/systemd/system/envd.service",
 			// Enable chrony service autostart
 			"etc/systemd/system/multi-user.target.wants/chrony.service": "etc/systemd/system/chrony.service",
+			// Enable static network setup (for kernels without CONFIG_IP_PNP)
+			"etc/systemd/system/multi-user.target.wants/setup-network.service": "etc/systemd/system/setup-network.service",
 		},
 	)
 	if err != nil {
