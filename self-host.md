@@ -116,7 +116,7 @@ Now, you should see the right quota options in `All Quotas` and be able to reque
 
 ### Steps
 
-1. Create `.env.prod`, `.env.staging`, or `.env.dev` from [`.env.template`](.env.template). Make sure to fill in the AWS-specific values:
+1. Create `.env.prod`, `.env.staging`, or `.env.dev` from [`.env.template`](.env.gcp.template). Make sure to fill in the AWS-specific values:
     - `PROVIDER=aws`
     - `AWS_PROFILE` - your AWS CLI profile name
     - `AWS_ACCOUNT_ID` - your AWS account ID
